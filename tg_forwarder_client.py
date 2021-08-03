@@ -1,11 +1,15 @@
 import logging
 import os
+import asyncio
 
 from pyrogram import Client, filters, handlers
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+loop = asyncio.get_event_loop()
+queues = {}
 
 CHANNELS_LIST = os.getenv("CHANNELS").split(",")
 CHAT_IDS = [int(chat_id) for chat_id in os.getenv("CHAT_IDS").split(",")]
@@ -18,11 +22,26 @@ logging.basicConfig(
     format="%(levelname)s: %(message)s",
 )
 
-async def channel_handler(_, message):
-    if message.chat.username in CHANNELS_LIST and not message.edit_date:
-        logging.info(message.chat)
-        for chat_id in CHAT_IDS:
-            await message.forward(chat_id)
+def send_media_group(client, media_group_id):
+    settings = get_settings()
+
+    for chat_id in settings.chats:
+        loop.create_task(client.forward_messages(chat_id, *queues[media_group_id]))
+
+
+async def channel_handler(client, msg):
+    if msg.chat.username in CHANNELS_LIST and not msg.edit_date:
+        logging.info(msg.chat)
+
+        if hasattr(msg, 'media_group_id') and msg.media_group_id:
+            if msg.media_group_id not in queues:
+                queues[msg.media_group_id] = (msg.chat.id, [])
+                loop.call_later(10, send_media_group, client, msg.media_group_id)
+
+            queues[msg.media_group_id][1].append(msg.message_id)
+        else:
+            for chat_id in CHAT_IDS:
+                await msg.forward(chat_id)
 
 
 def main():
