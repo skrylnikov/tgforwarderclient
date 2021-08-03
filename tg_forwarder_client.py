@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-CHANNELS_LIST = config("CHANNELS").split(",")
+CHANNELS_LIST = os.getenv("CHANNELS").split(",")
 CHAT_IDS = [int(chat_id) for chat_id in os.getenv("CHAT_IDS").split(",")]
 SESSION_STRING = os.getenv("SESSION_KEY", "bot_session")
 
