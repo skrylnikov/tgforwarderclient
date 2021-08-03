@@ -1,3 +1,4 @@
 dataclasses-settings ==0.5.0a1
 Pyrogram ~=1.2.9
 TgCrypto ~=1.2.2
+python-dotenv ==0.19.0

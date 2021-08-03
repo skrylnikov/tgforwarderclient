@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 
-@dataclass_settings(prefix="bot_")
+@dataclass_settings(prefix="bot_", dotenv_path=".env")
 class Settings:
     api_id: int
     api_hash: str
