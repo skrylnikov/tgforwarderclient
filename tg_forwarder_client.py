@@ -23,9 +23,7 @@ logging.basicConfig(
 )
 
 def send_media_group(client, media_group_id):
-    settings = get_settings()
-
-    for chat_id in settings.chats:
+    for chat_id in CHAT_IDS:
         loop.create_task(client.forward_messages(chat_id, *queues[media_group_id]))
 
 
