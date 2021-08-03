@@ -1,11 +1,15 @@
 import logging
-from dataclasses import field
-from functools import lru_cache
-from typing import List
 
-from dataclasses_settings import dataclass_settings
-from dataclasses_settings.params import field_params
 from pyrogram import Client, filters, handlers
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CHANNELS_LIST = config("CHANNELS").split(",")
+CHAT_IDS = [int(chat_id) for chat_id in os.getenv("CHAT_IDS").split(",")]
+SESSION_STRING = os.getenv("SESSION_KEY", "bot_session")
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,32 +17,15 @@ logging.basicConfig(
     format="%(levelname)s: %(message)s",
 )
 
-
-@dataclass_settings(prefix="bot_", dotenv_path=".env")
-class Settings:
-    api_id: int
-    api_hash: str
-    channels: List[str]
-    chats: List[int]
-    session: str = field(metadata=field_params(alias="session_key"))
-
-
-@lru_cache()
-def get_settings() -> Settings:
-    return Settings()
-
-
 async def channel_handler(_, message):
-    settings = get_settings()
-    if message.chat.username in settings.channels and not message.edit_date:
+    if message.chat.username in CHANNELS_LIST and not message.edit_date:
         logging.info(message.chat)
-        for chat_id in settings.chats:
+        for chat_id in CHAT_IDS:
             await message.forward(chat_id)
 
 
 def main():
-    settings = get_settings()
-    app = Client(settings.session, settings.api_id, settings.api_hash)
+    app = Client(SESSION_STRING, os.getenv('API_ID'), os.getenv('API_HASH'))
     app.add_handler(handlers.MessageHandler(channel_handler, filters.channel))
     app.run()
 
